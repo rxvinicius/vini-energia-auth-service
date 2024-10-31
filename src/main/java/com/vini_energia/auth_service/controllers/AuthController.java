@@ -1,5 +1,7 @@
 package com.vini_energia.auth_service.controllers;
 
+import com.vini_energia.auth_service.dtos.LoginResponse;
+import com.vini_energia.auth_service.dtos.UserDetails;
 import com.vini_energia.auth_service.models.User;
 import com.vini_energia.auth_service.repositories.UserRepository;
 import com.vini_energia.auth_service.services.JwtService;
@@ -41,18 +43,30 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody User loginRequest) {
+    public ResponseEntity<LoginResponse> login(@RequestBody User loginRequest) {
         Optional<User> user = Optional.ofNullable(userRepository.findByEmail(loginRequest.getEmail()));
 
         if (user.isPresent()) {
             PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
             if (passwordEncoder.matches(loginRequest.getPassword(), user.get().getPassword())) {
                 String token = jwtService.generateToken(user.get().getEmail());
-                return ResponseEntity.ok(token);
+                LoginResponse response = new LoginResponse(
+                        true,
+                        "Login successful",
+                        new UserDetails(
+                                user.get().getId().toHexString(),
+                                user.get().getEmail(),
+                                user.get().getName(),
+                                token
+                        )
+                );
+
+                return ResponseEntity.ok(response);
             }
         }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new LoginResponse(false, "Invalid email or password", null));
     }
 
 }

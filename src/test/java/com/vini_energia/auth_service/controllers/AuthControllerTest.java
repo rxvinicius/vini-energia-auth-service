@@ -1,8 +1,10 @@
 package com.vini_energia.auth_service.controllers;
 
+import com.vini_energia.auth_service.dtos.LoginResponse;
 import com.vini_energia.auth_service.models.User;
 import com.vini_energia.auth_service.repositories.UserRepository;
 import com.vini_energia.auth_service.services.JwtService;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,7 +36,9 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         testUser = new User();
+        testUser.setId(new ObjectId());
         testUser.setEmail("test@example.com");
+        testUser.setName("Test User");
         testUser.setPassword("password123");
     }
 
@@ -74,20 +78,34 @@ class AuthControllerTest {
         loginRequest.setEmail(testUser.getEmail());
         loginRequest.setPassword(textPassword);
 
-        ResponseEntity<String> response = authController.login(loginRequest);
+        ResponseEntity<LoginResponse> response = authController.login(loginRequest);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("dummyToken", response.getBody());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().isSuccess());
+        assertNotNull(response.getBody().getUser());
+        assertEquals("dummyToken", response.getBody().getUser().getToken());
+        assertEquals(testUser.getEmail(), response.getBody().getUser().getEmail());
+        assertEquals(testUser.getName(), response.getBody().getUser().getName());
+        assertEquals(testUser.getId().toHexString(), response.getBody().getUser().getId());
     }
 
     @Test
     void testLoginFailure() {
         when(userRepository.findByEmail(testUser.getEmail())).thenReturn(null);
 
-        ResponseEntity<String> response = authController.login(testUser);
+        User loginRequest = new User();
+        loginRequest.setEmail(testUser.getEmail());
+        loginRequest.setPassword("wrongPassword");
+
+        ResponseEntity<LoginResponse> response = authController.login(loginRequest);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals("Invalid email or password", response.getBody());
+        assertNotNull(response.getBody());
+        assertFalse(response.getBody().isSuccess());
+        assertNull(response.getBody().getUser());
+        assertEquals("Invalid email or password", response.getBody().getMessage());
+        assertNull(response.getBody().getUser());
     }
 
 }
