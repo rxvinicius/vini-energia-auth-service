@@ -1,6 +1,7 @@
 package com.vini_energia.auth_service.controllers;
 
 import com.vini_energia.auth_service.dtos.LoginResponse;
+import com.vini_energia.auth_service.dtos.RegisterResponse;
 import com.vini_energia.auth_service.dtos.UserDetails;
 import com.vini_energia.auth_service.models.User;
 import com.vini_energia.auth_service.repositories.UserRepository;
@@ -24,11 +25,12 @@ public class AuthController {
     private final JwtService jwtService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody User user) {
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody User user) {
         try {
             User foundUser = userRepository.findByEmail(user.getEmail());
             if (foundUser != null) {
-                return ResponseEntity.status((HttpStatus.CONFLICT)).body(("Email already in use"));
+                return ResponseEntity.status((HttpStatus.CONFLICT))
+                        .body(new RegisterResponse(false, "Email already in use", null));
             }
 
             PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -36,9 +38,15 @@ public class AuthController {
             user.setPassword(encryptedPassword);
 
             userRepository.save(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+
+            String token = jwtService.generateToken(user.getEmail());
+            UserDetails userDetails = new UserDetails(user.getId().toHexString(), user.getEmail(), user.getName(), token);
+            RegisterResponse response = new RegisterResponse(true, "User registered successfully", userDetails);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error registering user: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new RegisterResponse(false, "Error registering user: " + e.getMessage(), null));
         }
     }
 

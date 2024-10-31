@@ -1,6 +1,7 @@
 package com.vini_energia.auth_service.controllers;
 
 import com.vini_energia.auth_service.dtos.LoginResponse;
+import com.vini_energia.auth_service.dtos.RegisterResponse;
 import com.vini_energia.auth_service.models.User;
 import com.vini_energia.auth_service.repositories.UserRepository;
 import com.vini_energia.auth_service.services.JwtService;
@@ -47,10 +48,16 @@ class AuthControllerTest {
         when(userRepository.findByEmail(testUser.getEmail())).thenReturn(null);
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
-        ResponseEntity<String> response = authController.register(testUser);
+        ResponseEntity<RegisterResponse> response = authController.register(testUser);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("User registered successfully", response.getBody());
+
+        RegisterResponse body = response.getBody();
+
+        assertNotNull(body);
+        assertTrue(body.isSuccess());
+        assertEquals("User registered successfully", body.getMessage());
+        assertNotNull(body.getUser());
         verify(userRepository, times(1)).save(any(User.class));
     }
 
@@ -58,10 +65,16 @@ class AuthControllerTest {
     void testRegisterUserConflict() {
         when(userRepository.findByEmail(testUser.getEmail())).thenReturn(testUser);
 
-        ResponseEntity<String> response = authController.register(testUser);
+        ResponseEntity<RegisterResponse> response = authController.register(testUser);
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals("Email already in use", response.getBody());
+
+        RegisterResponse body = response.getBody();
+
+        assertNotNull(body);
+        assertFalse(body.isSuccess());
+        assertEquals("Email already in use", body.getMessage());
+        assertNull(body.getUser());
         verify(userRepository, never()).save(any(User.class));
     }
 
