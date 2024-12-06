@@ -10,24 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Configure Oracle CLI
-        env:
-          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
-          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
-          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
-          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
-          OCI_REGION: ${{ secrets.OCI_REGION }}
+      - name: Install OCI CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install oci-cli
+
+      - name: Set up OCI CLI configuration
         run: |
           echo "$OCI_PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
           oci setup config --key-file private_key.pem \
-            --user $OCI_USER_OCID \
-            --fingerprint $OCI_FINGERPRINT \
-            --tenancy $OCI_TENANCY_OCID \
-            --region $OCI_REGION
+          --user $OCI_USER_OCID \
+          --fingerprint $OCI_FINGERPRINT \
+          --tenancy $OCI_TENANCY_OCID \
+          --region $OCI_REGION
 
       - name: Build Docker Image
         run: |
