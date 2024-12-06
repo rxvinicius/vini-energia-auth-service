@@ -1,0 +1,55 @@
+name: Deploy to Oracle Cloud
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure Oracle CLI
+        env:
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+        run: |
+          echo "$OCI_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          oci setup config --key-file private_key.pem \
+            --user $OCI_USER_OCID \
+            --fingerprint $OCI_FINGERPRINT \
+            --tenancy $OCI_TENANCY_OCID \
+            --region $OCI_REGION
+
+      - name: Build Docker Image
+        run: |
+          docker build -t my-app:latest .
+
+      - name: Push Docker Image to Docker Hub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          docker tag my-app:latest $DOCKER_USERNAME/my-app:latest
+          docker push $DOCKER_USERNAME/my-app:latest
+
+      - name: Push Docker Image to Oracle Container Registry
+        env:
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+        run: |
+          docker tag my-app:latest ${OCI_REGION}.ocir.io/my-namespace/my-app:latest
+          echo $ORACLE_AUTH_TOKEN | docker login ${OCI_REGION}.ocir.io -u 'tenancy_namespace/username' --password-stdin
+          docker push ${OCI_REGION}.ocir.io/my-namespace/my-app:latest
+
+      - name: Deploy App on Oracle Cloud
+        run: |
+          echo "Custom deployment command"
