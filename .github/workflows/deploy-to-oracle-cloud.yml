@@ -21,11 +21,26 @@ jobs:
 
       - name: Set up OCI CLI configuration
         run: |
+          # Criação manual do arquivo de configuração do OCI CLI
+          mkdir -p ~/.oci
+          echo "[DEFAULT]" > ~/.oci/config
+          echo "user=$OCI_USER_OCID" >> ~/.oci/config
+          echo "fingerprint=$OCI_FINGERPRINT" >> ~/.oci/config
+          echo "tenancy=$OCI_TENANCY_OCID" >> ~/.oci/config
+          echo "region=$OCI_REGION" >> ~/.oci/config
+          echo "key_file=$HOME/private_key.pem" >> ~/.oci/config
+          
+          # Salvar chave privada no arquivo
           echo "$OCI_PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          cat private_key.pem
+
+          # Verificar se o arquivo de configuração foi gerado corretamente
+          cat ~/.oci/config
+
+          # Testar a configuração do OCI CLI
           oci --version
-          oci setup config --key-file private_key.pem --user $OCI_USER_OCID --fingerprint $OCI_FINGERPRINT --tenancy $OCI_TENANCY_OCID --region $OCI_REGION
+          oci os ns get
+
         env:
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
           OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
