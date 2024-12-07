@@ -59,8 +59,8 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i private_key.pem opc@${{ secrets.OCI_COMPUTE_IP }} <<EOF
             docker login ${OCI_REGION}.ocir.io -u 'tenancy_namespace/username' --password-stdin
-            docker pull ${OCI_REGION}.ocir.io/my-namespace/my-app:latest
-            docker run -d -p 80:8080 ${OCI_REGION}.ocir.io/my-namespace/my-app:latest
+            docker pull ${OCI_REGION}.ocir.io/${{ secrets.OCI_NAMESPACE }}/my-app:latest
+            docker run -d -p 80:8080 ${OCI_REGION}.ocir.io/${{ secrets.OCI_NAMESPACE }}/my-app:latest
           EOF
         env:
           OCI_COMPUTE_IP: ${{ secrets.OCI_COMPUTE_IP }}
