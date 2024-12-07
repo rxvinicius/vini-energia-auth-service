@@ -21,24 +21,15 @@ jobs:
 
       - name: Set up OCI CLI configuration
         run: |
-          # Criar o diretório para a configuração do OCI
           mkdir -p ~/.oci
-
-          # Criar o arquivo de configuração do OCI
           echo "[DEFAULT]" > ~/.oci/config
           echo "user=$OCI_USER_OCID" >> ~/.oci/config
           echo "fingerprint=$OCI_FINGERPRINT" >> ~/.oci/config
           echo "tenancy=$OCI_TENANCY_OCID" >> ~/.oci/config
           echo "region=$OCI_REGION" >> ~/.oci/config
-
-          # Criar o arquivo de chave privada
           echo "$OCI_PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-
-          # Configurar o caminho do arquivo de chave privada
           echo "key_file=$(pwd)/private_key.pem" >> ~/.oci/config
-
-          # Verificar a configuração e testar o OCI CLI
           cat ~/.oci/config
           oci --version
           oci os ns get
@@ -54,15 +45,6 @@ jobs:
         run: |
           docker build -t my-app:latest .
 
-      - name: Push Docker Image to Docker Hub
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: |
-          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-          docker tag my-app:latest $DOCKER_USERNAME/my-app:latest
-          docker push $DOCKER_USERNAME/my-app:latest
-
       - name: Push Docker Image to Oracle Container Registry
         env:
           OCI_REGION: ${{ secrets.OCI_REGION }}
@@ -72,7 +54,13 @@ jobs:
           echo $OCI_AUTH_TOKEN | docker login ${OCI_REGION}.ocir.io -u 'tenancy_namespace/username' --password-stdin
           docker push ${OCI_REGION}.ocir.io/my-namespace/my-app:latest
 
-
-      - name: Deploy App on Oracle Cloud
+      - name: Deploy Docker Container on OCI Compute Instance
         run: |
-          echo "Custom deployment command"
+          ssh -o StrictHostKeyChecking=no -i private_key.pem opc@${{ secrets.OCI_COMPUTE_IP }} <<EOF
+            docker login ${OCI_REGION}.ocir.io -u 'tenancy_namespace/username' --password-stdin
+            docker pull ${OCI_REGION}.ocir.io/my-namespace/my-app:latest
+            docker run -d -p 80:8080 ${OCI_REGION}.ocir.io/my-namespace/my-app:latest
+          EOF
+        env:
+          OCI_COMPUTE_IP: ${{ secrets.OCI_COMPUTE_IP }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
