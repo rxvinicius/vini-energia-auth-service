@@ -48,11 +48,12 @@ jobs:
       - name: Push Docker Image to Oracle Container Registry
         env:
           OCI_REGION: ${{ secrets.OCI_REGION }}
-          OCI_AUTH_TOKEN: ${{ secrets.OCI_AUTH_TOKEN }}  # Token de autenticação Oracle Cloud
+          OCI_AUTH_TOKEN: ${{ secrets.OCI_AUTH_TOKEN }}
         run: |
-          docker tag my-app:latest ${OCI_REGION}.ocir.io/my-namespace/my-app:latest
-          echo $OCI_AUTH_TOKEN | docker login ${OCI_REGION}.ocir.io -u 'tenancy_namespace/username' --password-stdin
-          docker push ${OCI_REGION}.ocir.io/my-namespace/my-app:latest
+          docker tag my-app:latest ${OCI_REGION}.ocir.io/${{ secrets.OCI_NAMESPACE }}/my-app:latest
+          echo $OCI_AUTH_TOKEN | docker login ${OCI_REGION}.ocir.io -u "${{ secrets.OCI_TENANCY_OCID }}/${{ secrets.OCI_USER_OCID }}" --password-stdin
+          docker push ${OCI_REGION}.ocir.io/${{ secrets.OCI_NAMESPACE }}/my-app:latest
+
 
       - name: Deploy Docker Container on OCI Compute Instance
         run: |
