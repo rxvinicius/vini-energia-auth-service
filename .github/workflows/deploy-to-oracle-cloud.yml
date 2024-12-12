@@ -44,6 +44,7 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t vini-energia-auth-service:latest .
+          docker images
 
       - name: Push Docker Image to Oracle Container Registry
         run: |
