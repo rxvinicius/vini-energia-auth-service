@@ -47,19 +47,19 @@ jobs:
 
       - name: Push Docker Image to Oracle Container Registry
         run: |
-          echo "${OCI_AUTH_TOKEN}" | docker login ${OCI_REGION}.ocir.io -u "${OCI_NAMESPACE}/${OCI_USER_OCID}" --password-stdin
+          echo "${OCI_PRIVATE_KEY}" | docker login ${OCI_REGION}.ocir.io -u "${OCI_NAMESPACE}/${OCI_USERNAME}" --password-stdin
           docker tag my-app:latest ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/my-app:latest
           docker push ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/my-app:latest
         env:
-          OCI_AUTH_TOKEN: ${{ secrets.OCI_AUTH_TOKEN }}
-          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
           OCI_REGION: ${{ secrets.OCI_REGION }}
           OCI_NAMESPACE: ${{ secrets.OCI_NAMESPACE }}
+          OCI_USERNAME: ${{ secrets.OCI_USERNAME }}
 
       - name: Deploy Docker Container on OCI Compute Instance
         run: |
           ssh -o StrictHostKeyChecking=no -i private_key.pem opc@${OCI_COMPUTE_IP} <<EOF
-            docker login ${OCI_REGION}.ocir.io -u 'tenancy_namespace/username' --password-stdin
+            echo "${OCI_PRIVATE_KEY}" | docker login ${OCI_REGION}.ocir.io -u "${OCI_NAMESPACE}/${OCI_USERNAME}" --password-stdin
             docker pull ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/my-app:latest
             docker run -d -p 80:8080 ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/my-app:latest
           EOF
