@@ -44,10 +44,11 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t vini-energia-auth-service:latest .
-          docker images
 
       - name: Push Docker Image to Oracle Container Registry
         run: |
+          cat ~/.docker/config.json
+          echo private_key.pem
           echo "${OCI_PRIVATE_KEY}" | docker login ${OCI_REGION}.ocir.io -u "${OCI_NAMESPACE}/${OCI_USERNAME}" --password-stdin
           docker tag vini-energia-auth-service:latest ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/vini-energia-auth-service:latest
           docker push ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/vini-energia-auth-service:latest
