@@ -43,13 +43,13 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t my-app:latest .
+          docker build -t vini-energia-auth-service:latest .
 
       - name: Push Docker Image to Oracle Container Registry
         run: |
           echo "${OCI_PRIVATE_KEY}" | docker login ${OCI_REGION}.ocir.io -u "${OCI_NAMESPACE}/${OCI_USERNAME}" --password-stdin
-          docker tag my-app:latest ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/my-app:latest
-          docker push ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/my-app:latest
+          docker tag vini-energia-auth-service:latest ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/vini-energia-auth-service:latest
+          docker push ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/vini-energia-auth-service:latest
         env:
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
           OCI_REGION: ${{ secrets.OCI_REGION }}
@@ -60,8 +60,8 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i private_key.pem opc@${OCI_COMPUTE_IP} <<EOF
             echo "${OCI_PRIVATE_KEY}" | docker login ${OCI_REGION}.ocir.io -u "${OCI_NAMESPACE}/${OCI_USERNAME}" --password-stdin
-            docker pull ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/my-app:latest
-            docker run -d -p 80:8080 ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/my-app:latest
+            docker pull ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/vini-energia-auth-service:latest
+            docker run -d -p 80:8080 ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/vini-energia-auth-service:latest
           EOF
         env:
           OCI_COMPUTE_IP: ${{ secrets.OCI_COMPUTE_IP }}
