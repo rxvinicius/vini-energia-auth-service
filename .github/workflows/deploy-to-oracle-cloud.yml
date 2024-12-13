@@ -48,9 +48,8 @@ jobs:
       - name: Push Docker Image to Oracle Container Registry
         run: |
           echo "${OCI_PRIVATE_KEY}" | docker login ${OCI_REGION}.ocir.io -u "${OCI_NAMESPACE}/${OCI_USERNAME}" --password-stdin
-          docker tag vini-energia-auth-service:latest ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/${OCI_USERNAME}/vini-energia-auth-service:latest
-          docker push ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/${OCI_USERNAME}/vini-energia-auth-service:latest
-          echo "passed"
+          docker tag vini-energia-auth-service:latest ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/vini-energia-auth-service:latest
+          docker push ${OCI_REGION}.ocir.io/${OCI_NAMESPACE}/vini-energia-auth-service:latest
         env:
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
           OCI_REGION: ${{ secrets.OCI_REGION }}
