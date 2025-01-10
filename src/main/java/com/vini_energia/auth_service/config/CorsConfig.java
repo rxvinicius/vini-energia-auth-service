@@ -14,7 +14,7 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
+        config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173", "https://vini-energia-frontend.vercel.app"));
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
 
