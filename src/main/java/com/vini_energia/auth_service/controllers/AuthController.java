@@ -26,6 +26,15 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody User user) {
+        // TODO: create a RegisterRequest class to validate the params or use @NotEmpty annotations in User model
+        if (
+                user.getEmail() == null || user.getEmail().isEmpty() ||
+                user.getPassword() == null || user.getPassword().isEmpty() ||
+                user.getName() == null || user.getName().isEmpty()
+        ) {
+            return ResponseEntity.badRequest().body(new RegisterResponse(false, "Email, password as name must not be empty", null));
+        }
+
         try {
             User foundUser = userRepository.findByEmail(user.getEmail());
             if (foundUser != null) {
@@ -52,6 +61,12 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody User loginRequest) {
+        // TODO: create a LoginRequest class to validate the params
+        if (loginRequest.getEmail() == null || loginRequest.getEmail().isEmpty() ||
+                loginRequest.getPassword() == null || loginRequest.getPassword().isEmpty()) {
+            return ResponseEntity.badRequest().body(new LoginResponse(false, "Email and password must not be empty", null));
+        }
+
         Optional<User> user = Optional.ofNullable(userRepository.findByEmail(loginRequest.getEmail()));
 
         if (user.isPresent()) {
